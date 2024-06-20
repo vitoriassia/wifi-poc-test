@@ -1,6 +1,5 @@
-import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 import 'package:flutter/material.dart';
-import 'package:wifi_iot/wifi_iot.dart';
+import 'package:plugin_wifi_connect/plugin_wifi_connect.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 import 'package:wifiot/webview_page.dart';
 
@@ -37,17 +36,13 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isConnect = false;
 
   void _connect(WiFiAccessPoint accessPoint) async {
-    var result = await WiFiForIoTPlugin.connect(
-      accessPoint.ssid,
-      withInternet: true,
-    );
+    var result = await PluginWifiConnect.connect(accessPoint.ssid, saveNetwork: true);
 
     setState(() {
-      _isConnect = result;
+      _isConnect = result ?? false;
     });
 
-    if (result) {
-      WiFiForIoTPlugin.forceWifiUsage(true);
+    if (_isConnect) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -58,11 +53,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _startScan() async {
-    await AndroidFlutterWifi.init();
-    WiFiForIoTPlugin.disconnect();
-    WiFiForIoTPlugin.forceWifiUsage(false);
+    _isConnect = false;
     // check platform support and necessary requirements
     final can = await WiFiScan.instance.canStartScan(askPermissions: true);
+
     if (can == CanStartScan.yes) {
       // start full scan async-ly
       await WiFiScan.instance.startScan();
